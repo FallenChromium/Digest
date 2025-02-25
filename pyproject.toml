@@ -1,0 +1,13 @@
+[project]
+name = "digest"
+version = "0.1.0"
+description = "A news aggregator app with a twist: you are in control of the recommendation algorithm. Your sources, your feed topics."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "requests",
+    "python-dotenv",
+]
