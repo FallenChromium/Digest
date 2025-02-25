@@ -6,8 +6,21 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi",
-    "uvicorn",
+    "granian",
     "pydantic",
     "requests",
     "python-dotenv",
+    "pydantic-settings",
+    "readability-lxml",
+    "feedparser",
+    "yake",
+    "textstat",
+    "langdetect",
+]
+
+[dependency-groups]
+dev = [
+    "fastapi[standard]",
+    "ruff",
+    "pytest",
 ]
