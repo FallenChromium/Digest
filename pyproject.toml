@@ -12,6 +12,7 @@ dependencies = [
     "python-dotenv",
     "pydantic-settings",
     "readability-lxml",
+    "lxml[html_clean]",
     "feedparser",
     "yake",
     "textstat",
@@ -23,4 +24,23 @@ dev = [
     "fastapi[standard]",
     "ruff",
     "pytest",
+    "pytest-asyncio",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+select = ["E", "F", "I"]
+ignore = []
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
 ]

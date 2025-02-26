@@ -31,12 +31,11 @@ class ContentPiece(BaseModel):
         description="Additional metadata specific to the content type"
     )
     processed: bool = Field(default=False, description="Whether the content has been processed")
-
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "id": "article-123",
-                "title": "Breaking News: Important Event",
+                "title": "Breaking News: Important Event", 
                 "content": "This is the full content of the article...",
                 "content_type": "article",
                 "url": "https://example.com/article/123",
@@ -49,6 +48,7 @@ class ContentPiece(BaseModel):
                 }
             }
         }
+    }
 
 
 class SourceType(str, Enum):
@@ -88,8 +88,8 @@ class SourceConfig(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     last_retrieved: Optional[datetime] = Field(None, description="When content was last retrieved")
 
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "id": "nytimes-rss",
                 "name": "New York Times - World News",
@@ -103,3 +103,4 @@ class SourceConfig(BaseModel):
                 "enabled": True
             }
         } 
+    }
