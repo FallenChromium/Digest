@@ -2,9 +2,9 @@ import pytest
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from app.retrieval.processors.pipeline import ProcessingPipeline
-from app.retrieval.processors.base import BaseProcessor, ProcessorRegistry
-from app.retrieval.models import ContentPiece
+from digest.retrieval.processors.pipeline import ProcessingPipeline
+from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
+from digest.retrieval.models import ContentPiece
 
 
 class TestProcessingPipeline:

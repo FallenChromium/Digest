@@ -1,8 +1,8 @@
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-from app.retrieval.models import SourceConfig, ContentPiece
-from app.retrieval.parsers.base import ParserRegistry
+from digest.retrieval.models import SourceConfig, ContentPiece
+from digest.retrieval.parsers.base import ParserRegistry
 
 
 class Source:

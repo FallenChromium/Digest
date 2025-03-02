@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, ClassVar
 
-from app.retrieval.models import ContentPiece, SourceType
+from digest.retrieval.models import ContentPiece, SourceType
 
 
 class ParserRegistry:
