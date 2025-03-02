@@ -17,6 +17,7 @@ dependencies = [
     "yake",
     "textstat",
     "langdetect",
+    "tchan>=0.1.4",
 ]
 
 [dependency-groups]

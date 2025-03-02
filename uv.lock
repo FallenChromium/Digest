@@ -149,6 +149,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "readability-lxml" },
     { name = "requests" },
+    { name = "tchan" },
     { name = "textstat" },
     { name = "yake" },
 ]
@@ -173,6 +174,7 @@ requires-dist = [
     { name = "python-dotenv" },
     { name = "readability-lxml" },
     { name = "requests" },
+    { name = "tchan", specifier = ">=0.1.4" },
     { name = "textstat" },
     { name = "yake" },
 ]
@@ -1063,6 +1065,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ec/fe/802052aecb21e3797b8f7902564ab6ea0d60ff8ca23952079064155d1ae1/tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c", size = 81090 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/40/44/4a5f08c96eb108af5cb50b41f76142f0afa346dfa99d5296fe7202a11854/tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f", size = 35252 },
+]
+
+[[package]]
+name = "tchan"
+version = "0.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lxml" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5d/53/ceda0c6b07080029ca3cc8b2bc15b1e9ceef7654789e6b2c610013edbc64/tchan-0.1.4.tar.gz", hash = "sha256:e3c382fca3fa1898ae78b025b8aa6dfea81a75df71d394d9ae1655baf535e321", size = 8781 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/60/8ead009daa258388e92ac3276095ef33073a3dc36c7a414afecc35c5b464/tchan-0.1.4-py3-none-any.whl", hash = "sha256:20d267056e7b820c8a7b070ea25dd5dee3255d9512c0e646e69f6d93d8f9e7c8", size = 9119 },
 ]
 
 [[package]]
