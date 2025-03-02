@@ -3,8 +3,8 @@ import pytest
 import asyncio
 from unittest.mock import patch, MagicMock
 
-from app.retrieval.parsers.rss import RssParser
-from app.retrieval.models import ContentPiece
+from digest.retrieval.parsers.rss import RssParser
+from digest.retrieval.models import ContentPiece
 
 
 class TestRssParser:

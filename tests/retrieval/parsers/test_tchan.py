@@ -1,6 +1,6 @@
 import pytest
 
-from app.retrieval.parsers.tchan import TchanParser
+from digest.retrieval.parsers.tchan import TchanParser
 
 
 class TestTchanParser:

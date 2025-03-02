@@ -5,10 +5,10 @@ from pathlib import Path
 from datetime import datetime
 from pydantic import HttpUrl
 
-from app.retrieval.models import ContentPiece, SourceConfig, SourceType, ContentType, UpdateFrequency
-from app.retrieval.sources.base import Source
-from app.retrieval.parsers.base import BaseParser, ParserRegistry
-from app.retrieval.processors.base import BaseProcessor, ProcessorRegistry
+from digest.retrieval.models import ContentPiece, SourceConfig, SourceType, ContentType, UpdateFrequency
+from digest.retrieval.sources.base import Source
+from digest.retrieval.parsers.base import BaseParser, ParserRegistry
+from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
 
 @pytest.fixture

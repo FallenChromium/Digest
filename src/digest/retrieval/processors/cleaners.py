@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Optional
 
 from readability import Document
 
-from app.retrieval.models import ContentPiece
-from app.retrieval.processors.base import BaseProcessor, ProcessorRegistry
+from digest.retrieval.models import ContentPiece
+from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
 
 @ProcessorRegistry.register

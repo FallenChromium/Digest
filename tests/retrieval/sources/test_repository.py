@@ -2,9 +2,9 @@ import pytest
 import json
 from pathlib import Path
 
-from app.retrieval.sources.repository import SourceRepository
-from app.retrieval.sources.base import Source
-from app.retrieval.models import SourceConfig, SourceType, UpdateFrequency
+from digest.retrieval.sources.repository import SourceRepository
+from digest.retrieval.sources.base import Source
+from digest.retrieval.models import SourceConfig, SourceType, UpdateFrequency
 
 
 class TestSourceRepository:

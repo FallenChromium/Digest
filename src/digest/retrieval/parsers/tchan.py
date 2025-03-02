@@ -3,8 +3,8 @@ from typing import Any, Dict, List
 from pydantic import HttpUrl
 from tchan import ChannelScraper
 
-from app.retrieval.models import ContentPiece, ContentType, SourceType
-from app.retrieval.parsers.base import BaseParser, ParserRegistry
+from digest.retrieval.models import ContentPiece, ContentType, SourceType
+from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 
 
 @ParserRegistry.register

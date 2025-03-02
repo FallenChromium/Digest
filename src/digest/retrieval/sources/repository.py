@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Any
 import uuid
 import time
 
-from app.retrieval.models import SourceConfig, SourceType
-from app.retrieval.sources.base import Source
+from digest.retrieval.models import SourceConfig, SourceType
+from digest.retrieval.sources.base import Source
 
 
 class SourceRepository:

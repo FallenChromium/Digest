@@ -4,11 +4,11 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from app.retrieval.models import ContentPiece, SourceConfig, SourceType, UpdateFrequency
-from app.retrieval.sources.repository import SourceRepository
-from app.retrieval.sources.base import Source
-from app.retrieval.processors.pipeline import ProcessingPipeline
-from app.retrieval.processors.base import BaseProcessor, ProcessorRegistry
+from digest.retrieval.models import ContentPiece, SourceConfig, SourceType, UpdateFrequency
+from digest.retrieval.sources.repository import SourceRepository
+from digest.retrieval.sources.base import Source
+from digest.retrieval.processors.pipeline import ProcessingPipeline
+from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
 
 class TestRetrievalIntegration:

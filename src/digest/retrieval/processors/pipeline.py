@@ -1,8 +1,8 @@
 import logging
 from typing import Dict, List, Optional, Any
 
-from app.retrieval.models import ContentPiece
-from app.retrieval.processors.base import BaseProcessor
+from digest.retrieval.models import ContentPiece
+from digest.retrieval.processors.base import BaseProcessor
 
 
 logger = logging.getLogger(__name__)
