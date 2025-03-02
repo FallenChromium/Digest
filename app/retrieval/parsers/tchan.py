@@ -38,7 +38,7 @@ class TchanParser(BaseParser):
         scraper = ChannelScraper()
         content_pieces = []
         for _, message in zip(range(limit), scraper.messages(channel_name)):
-            if message.type != "text":
+            if message.text is None:
                 continue
 
             content_piece = ContentPiece(
