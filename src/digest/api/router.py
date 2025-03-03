@@ -1,16 +1,14 @@
 from fastapi import APIRouter
 
-# from digest.api.v1.endpoints import feeds, users
+from digest.api.v1.endpoints import sources
 
 api_router = APIRouter()
+api_router.include_router(sources.router, prefix="/sources", tags=["Sources"])
 
-# Include routers from endpoints
-# api_router.include_router(feeds.router, prefix="/feeds", tags=["feeds"])
-# api_router.include_router(users.router, prefix="/users", tags=["users"])
 
 @api_router.get("/health", tags=["health"])
 async def health_check():
     """
     Health check endpoint to verify API is running.
     """
-    return {"status": "ok"} 
+    return {"status": "ok"}

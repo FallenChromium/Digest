@@ -178,4 +178,7 @@ class SourceRepository:
         return [
             source for source in self.sources.values()
             if source.config.source_type == source_type
-        ] 
+        ]
+
+
+repository = SourceRepository()
