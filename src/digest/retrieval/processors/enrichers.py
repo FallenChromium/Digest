@@ -3,7 +3,7 @@ import textstat
 import langdetect
 from typing import Any, Dict, List, Optional
 
-from digest.retrieval.models import ContentPiece
+from digest.database.models.content import ContentPiece
 from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
 
@@ -32,10 +32,10 @@ class LanguageDetectorProcessor(BaseProcessor):
             
         try:
             language = langdetect.detect(processed_content.content)
-            processed_content.metadata["language"] = language
+            processed_content.metainfo["language"] = language
         except:
             # Default to English if detection fails
-            processed_content.metadata["language"] = "en"
+            processed_content.metainfo["language"] = "en"
             
         return processed_content
 
@@ -69,7 +69,7 @@ class KeywordExtractorProcessor(BaseProcessor):
         if not processed_content.content:
             return processed_content
             
-        language = processed_content.metadata.get("language", "en")
+        language = processed_content.metainfo.get("language", "en")
         max_keywords = self.config.get("max_keywords", 10)
         
         # Initialize YAKE keyword extractor
@@ -86,7 +86,7 @@ class KeywordExtractorProcessor(BaseProcessor):
         # YAKE returns (keyword, score) tuples - we just want keywords
         keywords = [kw[0] for kw in keywords]
         
-        processed_content.metadata["keywords"] = keywords
+        processed_content.metainfo["keywords"] = keywords
         
         return processed_content
 
@@ -132,14 +132,14 @@ class ReadabilityScoreProcessor(BaseProcessor):
         if not processed_content.content:
             return processed_content
             
-        language = processed_content.metadata.get("language", "en")
+        language = processed_content.metainfo.get("language", "en")
         metrics = self.config.get("metrics", ["flesch_reading_ease", "flesch_kincaid_grade"])
         
         # Initialize readability scores
-        processed_content.metadata["readability"] = {}
+        processed_content.metainfo["readability"] = {}
         
         # Set language for textstat
-        textstat.set_lang(language)
+        textstat.textstat.set_lang(language)
         
         # Calculate requested metrics
         metric_functions = {
@@ -155,6 +155,6 @@ class ReadabilityScoreProcessor(BaseProcessor):
         for metric in metrics:
             if metric in metric_functions:
                 score = metric_functions[metric](processed_content.content)
-                processed_content.metadata["readability"][metric] = round(score, 2)
+                processed_content.metainfo["readability"][metric] = round(score, 2)
         
         return processed_content

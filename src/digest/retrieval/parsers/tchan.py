@@ -3,7 +3,8 @@ from typing import Any, Dict, List
 from pydantic import HttpUrl
 from tchan import ChannelScraper
 
-from digest.retrieval.models import ContentPiece, ContentType, SourceType
+from digest.database.models.content import ContentPiece
+from digest.database.enums import ContentType, SourceType
 from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 
 
@@ -46,7 +47,7 @@ class TchanParser(BaseParser):
                 title="",
                 content=message.text,
                 content_type=ContentType.POST,
-                url=HttpUrl(f"https://t.me/{channel_name}/{message.id}"),
+                url=f"https://t.me/{channel_name}/{message.id}",
                 author=message.author,
                 published_at=message.created_at,
                 source_id=self.source_id,

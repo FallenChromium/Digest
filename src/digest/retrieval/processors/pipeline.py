@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List, Optional, Any
 
-from digest.retrieval.models import ContentPiece
+from digest.database.models.content import ContentPiece
 from digest.retrieval.processors.base import BaseProcessor
 
 
@@ -13,7 +13,7 @@ class ProcessingPipeline:
     A pipeline for processing content pieces through a series of processors.
     """
     
-    def __init__(self, name: str, processors: List[BaseProcessor] = None):
+    def __init__(self, name: str, processors: List[BaseProcessor] | None = None):
         """
         Initialize a processing pipeline.
         

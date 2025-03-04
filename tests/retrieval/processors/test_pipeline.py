@@ -1,10 +1,11 @@
+from uuid import uuid4
 import pytest
 import asyncio
 from unittest.mock import MagicMock, patch
 
 from digest.retrieval.processors.pipeline import ProcessingPipeline
 from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
-from digest.retrieval.models import ContentPiece
+from digest.database.models.content import ContentPiece
 
 
 class TestProcessingPipeline:
@@ -121,7 +122,7 @@ class TestProcessingPipeline:
                 id="test-content-2",
                 title="Test Content 2",
                 content="This is another test content.",
-                source_id="test-source",
+                source_id=str(uuid4()),
                 url=None,
                 author=None,
                 published_at=None

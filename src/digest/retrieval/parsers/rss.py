@@ -8,7 +8,8 @@ import requests
 import feedparser
 from pydantic import HttpUrl, ValidationError
 
-from digest.retrieval.models import ContentPiece, ContentType, SourceType
+from digest.database.models.content import ContentPiece
+from digest.database.enums import ContentType, SourceType
 from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 
 
@@ -112,7 +113,7 @@ class RssParser(BaseParser):
                 author=entry.get("author"),
                 published_at=published_at,
                 source_id=self.source_id,
-                metadata={
+                metainfo={
                     "feed_title": feed.feed.get("title", ""),
                     "categories": [tag.term for tag in entry.get("tags", [])] if hasattr(entry, "tags") else []
                 }

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from readability import Document
 
-from digest.retrieval.models import ContentPiece
+from digest.database.models.content import ContentPiece
 from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
 
@@ -54,11 +54,6 @@ class ReaderModeProcessor(BaseProcessor):
             title = doc.title()
             if title:
                 article = f"<h1>{title}</h1>\n{article}"
-                
-        if self.config.get("include_excerpt", False):
-            excerpt = doc.get_excerpt()
-            if excerpt:
-                article = f"<p><em>{excerpt}</em></p>\n{article}"
         
         # Update the content
         processed_content.content = article

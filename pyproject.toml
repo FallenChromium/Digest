@@ -22,6 +22,9 @@ dependencies = [
     "textstat",
     "langdetect",
     "tchan>=0.1.4",
+    "sqlmodel",
+    "alembic",
+    "psycopg2-binary"
 ]
 
 [dependency-groups]
