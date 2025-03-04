@@ -87,3 +87,16 @@ async def test_source(source_id: str, session: Session = Depends(get_session)):
     print(ParserRegistry.list_parsers())
     parser = ParserRegistry.get_parser(source.parser_id)
     return await parser(source.id, source.config).test_connection()
+
+@router.get("/{source_id}/fetch")
+async def fetch_source(source_id: str, session: Session = Depends(get_session)):
+    source_repository = SourceRepository(session)
+    source = source_repository.get_by_id(source_id)
+    if not source:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Source with ID '{source_id}' does not exists",
+        )
+    task_manager.one_off_fetch(source_id)
+    # TODO: some task status checking endpoint, or plain wait for it?
+    return {"message": "Fetching source"}
