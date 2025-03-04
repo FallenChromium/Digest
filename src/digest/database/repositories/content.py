@@ -1,13 +1,24 @@
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import func, or_, text
+from sqlalchemy import func, or_, text, literal
 from sqlmodel import Session, select
 from sqlalchemy.dialects.postgresql import insert
 import langdetect
+from dataclasses import dataclass
 
 
 from digest.database.enums import ContentType
 from digest.database.models.content import ContentPiece
+
+
+@dataclass
+class SearchResult:
+    id: str
+    title: str
+    content: str
+    rank: Optional[float] = None
+    similarity: Optional[float] = None
+    snippet: Optional[str] = None
 
 
 class ContentRepository:
@@ -186,3 +197,75 @@ class ContentRepository:
         """Get all content pieces paged."""
         statement = select(ContentPiece).order_by(text('retrieved_at DESC')).offset((page - 1) * page_size).limit(page_size)
         return list(self.session.exec(statement))
+
+    def search_fts_only(self, query: str) -> List[SearchResult]:
+        """Full-text search only using tsvector."""
+        query_lang = self._detect_language(query)
+        tsquery = func.plainto_tsquery(query_lang, query)
+        
+        results = self.session.query(
+            ContentPiece,
+            func.ts_rank(text('content_tsv'), tsquery).label('rank'),
+            func.ts_headline(
+                query_lang,
+                ContentPiece.content,
+                tsquery,
+                'MaxWords=50, MinWords=15'
+            ).label('snippet')
+        ).filter(
+            or_(
+                text(f"content_tsv @@ plainto_tsquery('{query_lang}', :query)"),
+                text(f"title_tsv @@ plainto_tsquery('{query_lang}', :query)")
+            )
+        ).params(query=query).all()
+        
+        return [
+            SearchResult(
+                id=str(r[0].id),
+                title=r[0].title,
+                content=r[0].content,
+                rank=float(r[1]),
+                snippet=r[2]
+            ) for r in results
+        ]
+
+    def search_trigram_only(self, query: str, similarity_threshold: float = 0.3) -> List[SearchResult]:
+        """Trigram similarity search only."""
+        results = self.session.query(
+            ContentPiece,
+            func.similarity(ContentPiece.content, query).label('content_sim'),
+            func.similarity(ContentPiece.title, query).label('title_sim')
+        ).filter(
+            or_(
+                func.similarity(ContentPiece.content, query) > similarity_threshold,
+                func.similarity(ContentPiece.title, query) > similarity_threshold
+            )
+        ).all()
+        
+        return [
+            SearchResult(
+                id=str(r[0].id),
+                title=r[0].title,
+                content=r[0].content,
+                similarity=max(float(r[1]), float(r[2]))
+            ) for r in results
+        ]
+
+    def search_no_index(self, query: str) -> List[SearchResult]:
+        """Search without using any indices (ILIKE)."""
+        results = self.session.query(
+            ContentPiece
+        ).filter(
+            or_(
+                ContentPiece.content.ilike(f'%{query}%'),
+                ContentPiece.title.ilike(f'%{query}%')
+            )
+        ).all()
+        
+        return [
+            SearchResult(
+                id=str(r.id),
+                title=r.title,
+                content=r.content
+            ) for r in results
+        ]
