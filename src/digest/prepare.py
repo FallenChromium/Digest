@@ -10,17 +10,6 @@ def check_database_access():
     import asyncio
     from digest.config.settings import settings
     from sqlmodel import create_engine
-
-
-    DEFAULT_DB_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
-
-    database_uri = settings.DATABASE_URL
-
-    if not database_uri or database_uri == "...":
-        print("⚠️ `database_uri` is missing in the environment variables. Setting default one.")
-        settings.DATABASE_URL = DEFAULT_DB_URL
-        database_uri = settings.DATABASE_URL
-
         
 
     def get_docker_compose_command():
@@ -36,12 +25,12 @@ def check_database_access():
         return None
     async def test_connection():
         try:
-            engine = create_engine(database_uri)
+            engine = create_engine(settings.DATABASE_URL)
             with engine.connect() as connection:
                 connection.execute(text("SELECT 1"))
                 print("✅ Successfully connected to the database.")
         except Exception:
-            print(f"⚠️ Failed to connect to the database at `{database_uri}`")
+            print(f"⚠️ Failed to connect to the database at `{settings.DATABASE_URL}`")
             docker_compose = get_docker_compose_command()
 
             if docker_compose:
@@ -55,7 +44,7 @@ def check_database_access():
                     )
                     print(f"  ✅ `{docker_compose} up -d postgres` executed successfully. Retrying connection...")
                     # Retry the database connection after starting the container
-                    engine = create_engine(database_uri)
+                    engine = create_engine(settings.DATABASE_URL)
                     with engine.connect() as connection:
                         connection.execute(text("SELECT 1"))
                         print("  ✅ Successfully connected to the database after starting the container.")
