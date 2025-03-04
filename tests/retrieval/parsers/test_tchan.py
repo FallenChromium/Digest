@@ -1,5 +1,6 @@
 import pytest
 
+from digest.retrieval.parsers.base import ParserRegistry
 from digest.retrieval.parsers.tchan import TchanParser
 
 
@@ -23,3 +24,7 @@ class TestTchanParser:
         )
         result = await parser.test_connection()
         assert result is False
+
+    @pytest.mark.asyncio
+    async def check_parser_registry(self):
+        assert ParserRegistry.get_parser("tchan") is TchanParser
