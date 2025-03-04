@@ -1,20 +1,58 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
-from sqlmodel import Relationship, SQLModel, Field
+from sqlmodel import Relationship, SQLModel, Field, Column
 from uuid import UUID, uuid4
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlmodel import Index, text, UniqueConstraint, DDL
-from sqlalchemy import event
+from sqlalchemy import event, Column as SQLAlchemyColumn
 
 from digest.database.enums import ContentType
 
 # Create trigram extension if not exists
 
+# Add this mapping after imports, before the class
+LANGDETECT_TO_POSTGRES_MAP: Dict[str, str] = {
+    # Germanic
+    'en': 'english',
+    'de': 'german',
+    'nl': 'dutch',
+    'da': 'danish',
+    'sv': 'swedish',
+    'no': 'norwegian',
+    # Romance
+    'es': 'spanish',
+    'fr': 'french',
+    'it': 'italian',
+    'pt': 'portuguese',
+    'ro': 'romanian',
+    'ca': 'catalan',
+    # Slavic
+    'ru': 'russian',
+    'sr': 'serbian',
+    # Other Indo-European
+    'el': 'greek',
+    'hi': 'hindi',
+    'lt': 'lithuanian',
+    'ga': 'irish',
+    'hy': 'armenian',
+    'yi': 'yiddish',
+    # Uralic
+    'fi': 'finnish',
+    'hu': 'hungarian',
+    # Others
+    'eu': 'basque',
+    'id': 'indonesian',
+    'ta': 'tamil',
+    'tr': 'turkish',
+    'ar': 'arabic',
+    'ne': 'nepali'
+}
+
 class ContentPiece(SQLModel, table=True):
+    __tablename__ = 'content_piece'
     """Database model for content pieces."""
     __table_args__ = (
         UniqueConstraint('url', name='uq_content_url'),
-        # TODO: ts_vector index for keyword search if we'll deem it necessary
         Index(
             'ix_content_piece_trigram',
             text('title gin_trgm_ops'),
@@ -40,10 +78,63 @@ class ContentPiece(SQLModel, table=True):
     metainfo: Dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
     processed: bool = Field(default=False) 
 
+    # Generated columns for full-text search
+    title_tsv: Optional[str] = Field(
+        sa_column=SQLAlchemyColumn(
+            TSVECTOR,
+            nullable=False
+        ),
+        exclude=True  # Exclude from model serialization
+    )
+    content_tsv: Optional[str] = Field(
+        sa_column=SQLAlchemyColumn(
+            TSVECTOR,
+            nullable=False
+        ),
+        exclude=True  # Exclude from model serialization
+    )
+
     source: "Source" = Relationship(back_populates="content_pieces") # type: ignore
 
+    @staticmethod
+    def convert_language_code(lang_code: str) -> str:
+        return LANGDETECT_TO_POSTGRES_MAP.get(lang_code, 'simple')
+
+# Create trigram extension before anything else
 event.listen(
     SQLModel.metadata,
     'before_create',
     DDL('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+)
+
+# Create trigger function and trigger after table creation
+event.listen(
+    ContentPiece.__table__,
+    'after_create',
+    DDL('''
+    CREATE OR REPLACE FUNCTION content_piece_tsvector_trigger() RETURNS trigger AS $$
+    DECLARE
+        lang regconfig;
+    BEGIN
+        -- Try to use the language from metainfo, fallback to 'simple' if not supported
+        BEGIN
+            lang := COALESCE(NEW.metainfo->>'language', 'simple')::regconfig;
+        EXCEPTION WHEN undefined_object THEN
+            lang := 'simple'::regconfig;
+        END;
+        
+        NEW.title_tsv := to_tsvector(lang, NEW.title);
+        NEW.content_tsv := to_tsvector(lang, NEW.content);
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER content_piece_tsvector_update
+        BEFORE INSERT OR UPDATE ON content_piece
+        FOR EACH ROW
+        EXECUTE FUNCTION content_piece_tsvector_trigger();
+        
+    CREATE INDEX ix_content_piece_title_tsv ON content_piece USING gin(title_tsv);
+    CREATE INDEX ix_content_piece_content_tsv ON content_piece USING gin(content_tsv);
+    ''')
 )
