@@ -18,15 +18,3 @@ class SourceType(str, Enum):
     WEBPAGE = "webpage"
     FILE_FOLDER = "file_folder"
     CUSTOM = "custom"
-
-
-class UpdateFrequency(str, Enum):
-    """Frequency options for source updates."""
-    REALTIME = "realtime"  # For websocket or streaming sources
-    MINUTES_5 = "5min"
-    MINUTES_15 = "15min"
-    MINUTES_30 = "30min"
-    HOURLY = "hourly"
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MANUAL = "manual"

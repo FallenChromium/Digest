@@ -8,7 +8,7 @@ import os
 from digest.config.settings import settings
 from digest.database.models.source import Source
 from digest.database.repositories.sources import SourceRepository
-from digest.database.enums import SourceType, UpdateFrequency
+from digest.database.enums import SourceType
 
 
 def get_test_db_url():

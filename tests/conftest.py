@@ -8,7 +8,7 @@ from pydantic import HttpUrl
 
 from digest.database.models.content import ContentPiece
 from digest.database.models.source import Source
-from digest.database.enums import SourceType, ContentType, UpdateFrequency
+from digest.database.enums import SourceType, ContentType
 from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
@@ -48,7 +48,7 @@ def sample_source():
         name="New York Times - Technology",
         source_type=SourceType.RSS,
         parser_id="mock_parser",
-        update_frequency=UpdateFrequency.HOURLY,
+        update_frequency=3600,
         config={
             "url": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
             "user_agent": "Digest RSS Reader/1.0"

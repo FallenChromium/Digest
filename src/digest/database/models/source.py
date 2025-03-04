@@ -5,7 +5,7 @@ from sqlmodel import Field, Relationship, SQLModel, Column
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 
 from digest.database.models.content import ContentPiece
-from digest.database.enums import SourceType, UpdateFrequency
+from digest.database.enums import SourceType
 
 
 class Source(SQLModel, table=True):
@@ -20,7 +20,7 @@ class Source(SQLModel, table=True):
     name: str = Field(index=True)
     source_type: SourceType
     parser_id: str = Field(index=True)
-    update_frequency: UpdateFrequency = Field(default=UpdateFrequency.HOURLY)
+    update_frequency: int = Field(default=3600) # seconds
     config: Dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
     enabled: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
