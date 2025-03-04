@@ -44,7 +44,7 @@ def check_database_access():
                     )
                     print(f"  ✅ `{docker_compose} up -d postgres` executed successfully. Retrying connection...")
                     # Retry the database connection after starting the container
-                    engine = create_engine(settings.DATABASE_URL)
+                    engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True, pool_recycle=3600, connect_args={"connect_timeout": 10})
                     with engine.connect() as connection:
                         connection.execute(text("SELECT 1"))
                         print("  ✅ Successfully connected to the database after starting the container.")
