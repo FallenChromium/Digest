@@ -4,8 +4,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from digest.api.router import api_router
 from digest.config.settings import settings
+from digest.api.router import api_router
+from digest.database.session import create_db_and_tables
 from digest.prepare import prepare
 from digest.retrieval.task_manager import task_manager
 
@@ -38,4 +39,5 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 if __name__ == "__main__":
     prepare()
+    create_db_and_tables()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
