@@ -5,6 +5,7 @@ from sqlalchemy import text
 from uuid import UUID
 import os
 
+from digest.config.settings import settings
 from digest.database.models.source import Source
 from digest.database.repositories.sources import SourceRepository
 from digest.database.enums import SourceType, UpdateFrequency
@@ -12,7 +13,7 @@ from digest.database.enums import SourceType, UpdateFrequency
 
 def get_test_db_url():
     """Get the test database URL, creating a new test database if needed."""
-    base_db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
+    base_db_url = settings.DATABASE_URL
     # Create a unique test database name
     test_db_name = "test_digest"
     # Get the base URL without the database name
@@ -23,7 +24,7 @@ def get_test_db_url():
 @pytest.fixture(scope="session")
 def db_url():
     """Create and drop test database."""
-    base_db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
+    base_db_url = settings.DATABASE_URL
     test_db_url = get_test_db_url()
     
     # Connect to default database to create/drop test database
