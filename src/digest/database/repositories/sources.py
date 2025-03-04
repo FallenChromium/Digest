@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID
 from sqlmodel import Session, select
 
 from digest.database.models.source import Source
@@ -20,7 +19,7 @@ class SourceRepository:
         self.session.refresh(source)
         return source
 
-    def get_by_id(self, source_id: UUID) -> Optional[Source]:
+    def get_by_id(self, source_id: str) -> Optional[Source]:
         """Get a source by ID."""
         return self.session.get(Source, source_id)
 
@@ -51,7 +50,7 @@ class SourceRepository:
         self.session.refresh(source)
         return source
 
-    def delete(self, source_id: UUID) -> bool:
+    def delete(self, source_id: str) -> bool:
         """Delete a source."""
         source = self.get_by_id(source_id)
         if not source:
@@ -61,7 +60,7 @@ class SourceRepository:
         self.session.commit()
         return True
 
-    def update_last_retrieved(self, source_id: UUID) -> bool:
+    def update_last_retrieved(self, source_id: str) -> bool:
         """Update the last_retrieved timestamp of a source."""
         source = self.get_by_id(source_id)
         if not source:
@@ -70,4 +69,4 @@ class SourceRepository:
         source.last_retrieved = datetime.utcnow()
         self.session.add(source)
         self.session.commit()
-        return True 
+        return True
