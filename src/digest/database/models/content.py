@@ -4,8 +4,11 @@ from sqlmodel import Relationship, SQLModel, Field
 from uuid import UUID, uuid4
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Index, text, UniqueConstraint, DDL
+from sqlalchemy import event
 
 from digest.database.enums import ContentType
+
+# Create trigram extension if not exists
 
 class ContentPiece(SQLModel, table=True):
     """Database model for content pieces."""
@@ -39,20 +42,8 @@ class ContentPiece(SQLModel, table=True):
 
     source: "Source" = Relationship(back_populates="content_pieces") # type: ignore
 
-# Create trigger for automatic search vector updates
-search_vector_trigger = DDL('''
-    CREATE TRIGGER content_piece_search_vector_update
-        BEFORE INSERT OR UPDATE
-        ON contentpiece
-        FOR EACH ROW
-        EXECUTE FUNCTION
-        tsvector_update_trigger(
-            search_vector, 'pg_catalog.english',
-            title, content
-        );
-''')
-
-# Create trigram extension if not exists
-create_extension_trigger = DDL('''
-    CREATE EXTENSION IF NOT EXISTS pg_trgm;
-''')
+event.listen(
+    SQLModel.metadata,
+    'before_create',
+    DDL('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+)

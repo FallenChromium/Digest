@@ -1,6 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 from sqlmodel import Session, select
+from sqlalchemy.dialects.postgresql import insert
 
 from digest.database.enums import ContentType
 from digest.database.models.content import ContentPiece
@@ -64,4 +65,28 @@ class ContentRepository:
         content_piece.processed = True
         self.session.add(content_piece)
         self.session.commit()
-        return True 
+        return True
+
+    def bulk_insert(self, content_pieces: List[ContentPiece]) -> int:
+        """
+        Efficiently inserts multiple content pieces, skipping those with duplicate URLs.
+        Returns the number of new pieces inserted.
+        """
+        if not content_pieces:
+            return 0
+        
+        # convert to dicts because we're using SQL-level statement
+        content_dicts = [piece.model_dump() for piece in content_pieces]
+        stmt = insert(ContentPiece).values(content_dicts).on_conflict_do_nothing(index_elements=['url'])
+        result = self.session.execute(stmt)
+        self.session.commit()
+        
+        return result.rowcount
+
+    def get_latest_content_for_source(self, source_id: str, limit: int = 1) -> List[ContentPiece]:
+        """Get the most recent content pieces for a source."""
+        statement = select(ContentPiece).where(
+            ContentPiece.source_id == source_id
+        ).order_by(ContentPiece.retrieved_at.desc()).limit(limit)
+        
+        return list(self.session.exec(statement).all()) 
