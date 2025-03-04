@@ -1,12 +1,14 @@
 import os
+from uuid import uuid4
 import pytest
 import tempfile
 from pathlib import Path
 from datetime import datetime
 from pydantic import HttpUrl
 
-from digest.retrieval.models import ContentPiece, SourceConfig, SourceType, ContentType, UpdateFrequency
-from digest.retrieval.sources.base import Source
+from digest.database.models.content import ContentPiece
+from digest.database.models.source import Source
+from digest.database.enums import SourceType, ContentType, UpdateFrequency
 from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 from digest.retrieval.processors.base import BaseProcessor, ProcessorRegistry
 
@@ -26,11 +28,11 @@ def sample_content_piece():
             policymakers grappled with regulation and ethical concerns.</p>
             </article>""",
         content_type=ContentType.ARTICLE,
-        source_id="nytimes-tech",
-        url=HttpUrl("https://www.nytimes.com/2024/01/01/technology/ai-advances-2023.html"), # non-existent URL, but that's fine
+        source_id=str(uuid4()),
+        url="https://www.nytimes.com/2024/01/01/technology/ai-advances-2023.html", # non-existent URL, but that's fine
         author="Cade Metz",
         published_at=datetime(2024, 1, 1, 9, 0),
-        metadata={
+        metainfo={
             "categories": ["technology", "artificial intelligence", "year in review"],
             "read_time_minutes": 5,
             "section": "Technology"
@@ -39,10 +41,10 @@ def sample_content_piece():
 
 
 @pytest.fixture
-def sample_source_config():
-    """Return a sample source configuration for testing."""
-    return SourceConfig(
-        id="nytimes-tech",
+def sample_source():
+    """Return a sample source for testing."""
+    return Source(
+        id=str(uuid4()),
         name="New York Times - Technology",
         source_type=SourceType.RSS,
         parser_id="mock_parser",
@@ -51,7 +53,6 @@ def sample_source_config():
             "url": "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
             "user_agent": "Digest RSS Reader/1.0"
         },
-        tags=["technology", "trusted source"],
         last_retrieved=datetime(2024, 1, 1, 8, 0)
     )
 
@@ -94,7 +95,7 @@ class MockParser(BaseParser):
                 title="The Year in Technology: AI's Rapid Rise",
                 content="<article><p>Artificial intelligence saw unprecedented advances in 2023...</p></article>",
                 source_id=self.source_id,
-                url=HttpUrl("https://www.nytimes.com/2024/01/01/technology/ai-advances-2023.html"),
+                url="https://www.nytimes.com/2024/01/01/technology/ai-advances-2023.html",
                 author="Cade Metz",
                 published_at=datetime(2024, 1, 1, 9, 0)
             ),
@@ -103,7 +104,7 @@ class MockParser(BaseParser):
                 title="Tech Companies Prepare for AI Regulation",
                 content="<article><p>Major tech companies are preparing for new AI regulations...</p></article>",
                 source_id=self.source_id,
-                url=HttpUrl("https://www.nytimes.com/2024/01/01/technology/ai-regulation-prep.html"),
+                url="https://www.nytimes.com/2024/01/01/technology/ai-regulation-prep.html",
                 author="Karen Weise",
                 published_at=datetime(2024, 1, 1, 10, 30)
             )

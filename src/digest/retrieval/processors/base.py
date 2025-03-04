@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, ClassVar
 
-from digest.retrieval.models import ContentPiece
+from digest.database.models.content import ContentPiece
 
 
 class ProcessorRegistry:

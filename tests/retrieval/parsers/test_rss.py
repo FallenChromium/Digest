@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import patch, MagicMock
 
 from digest.retrieval.parsers.rss import RssParser
-from digest.retrieval.models import ContentPiece
+from digest.database.models.content import ContentPiece
 
 
 class TestRssParser:
@@ -93,8 +93,8 @@ class TestRssParser:
             assert all(isinstance(piece, ContentPiece) for piece in content_pieces)
             assert content_pieces[0].title == "Test Item 1"
             assert content_pieces[1].title == "Test Item 2"
-            assert content_pieces[0].url == HttpUrl("https://example.com/item1")
-            assert content_pieces[1].url == HttpUrl("https://example.com/item2")
+            assert content_pieces[0].url == "https://example.com/item1"
+            assert content_pieces[1].url == "https://example.com/item2"
             assert content_pieces[0].source_id == "test-source"
             assert content_pieces[1].source_id == "test-source"
     
