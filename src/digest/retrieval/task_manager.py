@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict
 
-from digest.retrieval.parsers.base import ParserRegistry
+from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 from digest.database.models.source import Source
 from digest.database.repositories.sources import SourceRepository
 from digest.database.repositories.content import ContentRepository
@@ -14,9 +14,21 @@ class TaskManager:
         self.content_repository = content_repository
         self.parser_tasks: Dict[str, asyncio.Task] = {}
 
+    async def _fetch_content(self, parser: BaseParser):
+        content_pieces = await parser.fetch()
+        source = self.source_repository.get_by_id(parser.source_id)
+        if not source:
+            raise ValueError(f"Source with ID '{parser.source_id}' does not exist")
+        if content_pieces:
+            # Efficiently insert new content pieces, skipping duplicates
+            new_pieces = self.content_repository.bulk_insert(content_pieces)
+            print(f"Parser for {source.name} got {len(content_pieces)} content pieces, {new_pieces} new pieces inserted")
+        current_time = datetime.utcnow()
+        source.last_retrieved = current_time
+        self.source_repository.update(source)
     async def _start_parser(self, source: Source):
         try:
-            print(f"Parser {source.id} started")
+            print(f"Parser for {source.name} activated")
             source_id = source.id
             parser_id = source.parser_id
             parser_config = source.config
@@ -35,14 +47,7 @@ class TaskManager:
                     await asyncio.sleep(30) # no busy waiting
                     continue
 
-                content_pieces = await parser.fetch()
-                if content_pieces:
-                    # Efficiently insert new content pieces, skipping duplicates
-                    new_pieces = self.content_repository.bulk_insert(content_pieces)
-                    print(f"Parser for {source.name} got {len(content_pieces)} content pieces, {new_pieces} new pieces inserted")
-                
-                source.last_retrieved = current_time
-                self.source_repository.update(source)
+                await self._fetch_content(parser)
                 await asyncio.sleep(update_frequency)
 
         except asyncio.CancelledError as e:
@@ -73,8 +78,13 @@ class TaskManager:
         if source_id in self.parser_tasks:
             self.parser_tasks[source_id].cancel()
             del self.parser_tasks[source_id]
-            if source_id in self.last_fetch_times:
-                del self.last_fetch_times[source_id]
+
+    def one_off_fetch(self, source_id: str):
+        source = self.source_repository.get_by_id(source_id)
+        if not source:
+            raise ValueError(f"Source with ID '{source_id}' does not exist")
+        parser = ParserRegistry.get_parser(source.parser_id)
+        return asyncio.create_task(self._fetch_content(parser(source.id, source.config)))
 
 # Initialize repositories with a long-lived session
 session = get_long_session()
