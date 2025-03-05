@@ -1,4 +1,4 @@
-import type { Content, PaginatedResponse, SearchBenchmark, Source } from '@/types/api';
+import type { Content, PaginatedResponse, Source } from '@/types/api';
 
 export const mockSources: Source[] = [
   {
@@ -65,21 +65,10 @@ export const mockPaginatedContent = (page: number = 1, size: number = 10): Pagin
   };
 };
 
-export const mockSearchBenchmark = (query: string): SearchBenchmark => {
-  const results = mockContent.filter(
+export const mockSearch = (query: string): Content[] => {
+  return mockContent.filter(
     (item) =>
       item.title.toLowerCase().includes(query.toLowerCase()) ||
       item.content.toLowerCase().includes(query.toLowerCase())
   );
-
-  return {
-    query,
-    results,
-    analysis: {
-      total_time: 0.156,
-      preprocessing_time: 0.023,
-      search_time: 0.089,
-      ranking_time: 0.044,
-    },
-  };
 }; 

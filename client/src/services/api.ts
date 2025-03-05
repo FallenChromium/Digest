@@ -1,6 +1,6 @@
 import axios from 'axios';
-import type { Content, PaginatedResponse, SearchBenchmark, Source } from '@/types/api';
-import { mockSources, mockPaginatedContent, mockSearchBenchmark } from '@/mocks/data';
+import type { Content, PaginatedResponse, Source } from '@/types/api';
+import { mockSources, mockPaginatedContent, mockSearch } from '@/mocks/data';
 
 const USE_MOCK_DATA = false; // Toggle this to switch between mock and real API
 
@@ -32,13 +32,11 @@ export const getContent = async (
   return response.data;
 };
 
-export const searchContent = async (
-  query: string
-): Promise<SearchBenchmark> => {
+export const searchContent = async (query: string): Promise<Content[]> => {
   if (USE_MOCK_DATA) {
-    return Promise.resolve(mockSearchBenchmark(query));
+    return Promise.resolve(mockSearch(query));
   }
-  const response = await api.get<SearchBenchmark>(`/content/search/benchmark`, {
+  const response = await api.get<Content[]>('/content/search', {
     params: { query },
   });
   return response.data;
