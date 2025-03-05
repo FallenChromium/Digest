@@ -21,15 +21,4 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   size: number;
-}
-
-export interface SearchBenchmark {
-  query: string;
-  results: Content[];
-  analysis: {
-    total_time: number;
-    preprocessing_time: number;
-    search_time: number;
-    ranking_time: number;
-  };
 } 

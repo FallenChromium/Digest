@@ -33,9 +33,10 @@
           <n-input-group>
             <n-input
               v-model:value="searchQuery"
-              placeholder="Enter search query for benchmark..."
+              placeholder="Search content..."
               @keyup.enter="handleSearch"
               class="search-input"
+              clearable
             />
             <n-button
               type="primary"
@@ -49,30 +50,33 @@
 
           <!-- Search Results -->
           <template v-if="searchResults">
-            <n-divider>Search Analysis</n-divider>
-            <n-descriptions bordered size="small" class="analysis-container" :column="2">
-              <n-descriptions-item label="Total Time">
-                {{ searchResults.analysis.total_time.toFixed(3) }}s
-              </n-descriptions-item>
-              <n-descriptions-item label="Preprocessing Time">
-                {{ searchResults.analysis.preprocessing_time.toFixed(3) }}s
-              </n-descriptions-item>
-              <n-descriptions-item label="Search Time">
-                {{ searchResults.analysis.search_time.toFixed(3) }}s
-              </n-descriptions-item>
-              <n-descriptions-item label="Ranking Time">
-                {{ searchResults.analysis.ranking_time.toFixed(3) }}s
-              </n-descriptions-item>
-            </n-descriptions>
-
             <n-divider>Results</n-divider>
-            <n-list v-if="searchResults.results.length > 0" hoverable clickable class="results-list">
-              <n-list-item v-for="result in searchResults.results" :key="result.id">
+            <n-list v-if="searchResults.length > 0" hoverable clickable class="results-list">
+              <n-list-item v-for="result in searchResults" :key="result.id">
                 <n-thing :title="result.title" class="content-item">
+                  <template #header>
+                    <n-tag :bordered="false" type="info" size="small">
+                      {{ getSourceName(result.source_id) }}
+                    </n-tag>
+                  </template>
                   <template #description>
                     <n-text depth="3">{{ formatDate(result.created_at) }}</n-text>
                   </template>
                   <div class="content-text">{{ result.content }}</div>
+                  <template #footer>
+                    <n-space>
+                      <n-button
+                        text
+                        type="primary"
+                        tag="a"
+                        :href="result.url"
+                        target="_blank"
+                        class="source-link"
+                      >
+                        View Source
+                      </n-button>
+                    </n-space>
+                  </template>
                 </n-thing>
               </n-list-item>
             </n-list>
@@ -150,8 +154,6 @@ import {
   NInputGroup,
   NButton,
   NDivider,
-  NDescriptions,
-  NDescriptionsItem,
   NList,
   NListItem,
   NThing,
@@ -163,7 +165,7 @@ import {
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
 import { getContent, getSources, searchContent } from '@/services/api';
-import type { Content, SearchBenchmark, Source } from '@/types/api';
+import type { Content, Source } from '@/types/api';
 
 const message = useMessage();
 
@@ -171,7 +173,7 @@ const message = useMessage();
 const sources = ref<Source[]>([]);
 const content = ref<Content[]>([]);
 const searchQuery = ref('');
-const searchResults = ref<SearchBenchmark | null>(null);
+const searchResults = ref<Content[] | null>(null);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalItems = ref(0);
