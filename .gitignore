@@ -172,3 +172,15 @@ cython_debug/
 
 # Devcontainer configuration files
 .devcontainer/
+
+# VSCode
+.vscode/
+
+# Seed
+.seed_data
+
+# history4feed
+history4feed
+
+# Front-end
+node_modules

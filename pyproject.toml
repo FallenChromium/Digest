@@ -33,6 +33,7 @@ dev = [
     "ruff",
     "pytest",
     "pytest-asyncio",
+    "tchan[cli]"
 ]
 
 [tool.pytest.ini_options]
