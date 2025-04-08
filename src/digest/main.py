@@ -15,6 +15,7 @@ from digest.retrieval.task_manager import task_manager
 async def lifespan(app: FastAPI):
     task_manager.start_all_parsers()
     yield
+    await task_manager.stop_all_parsers()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

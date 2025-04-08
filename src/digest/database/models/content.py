@@ -4,7 +4,8 @@ from sqlmodel import Relationship, SQLModel, Field, Column
 from uuid import UUID, uuid4
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlmodel import Index, text, UniqueConstraint, DDL
-from sqlalchemy import event, Column as SQLAlchemyColumn
+from sqlalchemy import event, Column as SQLAlchemyColumn, Table
+from sqlalchemy.ext.declarative import declared_attr
 
 from digest.database.enums import ContentType
 
@@ -76,7 +77,7 @@ class ContentPiece(SQLModel, table=True):
     retrieved_at: datetime = Field(default_factory=datetime.utcnow)
     source_id: str = Field(foreign_key="source.id", index=True)
     metainfo: Dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
-    processed: bool = Field(default=False) 
+    processed: bool = Field(default=False)
 
     # Generated columns for full-text search
     title_tsv: Optional[str] = Field(
@@ -108,33 +109,32 @@ event.listen(
 )
 
 # Create trigger function and trigger after table creation
-event.listen(
-    ContentPiece.__table__,
-    'after_create',
-    DDL('''
-    CREATE OR REPLACE FUNCTION content_piece_tsvector_trigger() RETURNS trigger AS $$
-    DECLARE
-        lang regconfig;
-    BEGIN
-        -- Try to use the language from metainfo, fallback to 'simple' if not supported
+@event.listens_for(Table, 'after_create')
+def create_triggers(target, connection, **kw):
+    if target.name == 'content_piece':
+        connection.execute(text('''
+        CREATE OR REPLACE FUNCTION content_piece_tsvector_trigger() RETURNS trigger AS $$
+        DECLARE
+            lang regconfig;
         BEGIN
-            lang := COALESCE(NEW.metainfo->>'language', 'simple')::regconfig;
-        EXCEPTION WHEN undefined_object THEN
-            lang := 'simple'::regconfig;
-        END;
-        
-        NEW.title_tsv := to_tsvector(lang, NEW.title);
-        NEW.content_tsv := to_tsvector(lang, NEW.content);
-        RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
+            -- Try to use the language from metainfo, fallback to 'simple' if not supported
+            BEGIN
+                lang := COALESCE(NEW.metainfo->>'language', 'simple')::regconfig;
+            EXCEPTION WHEN undefined_object THEN
+                lang := 'simple'::regconfig;
+            END;
 
-    CREATE TRIGGER content_piece_tsvector_update
-        BEFORE INSERT OR UPDATE ON content_piece
-        FOR EACH ROW
-        EXECUTE FUNCTION content_piece_tsvector_trigger();
-        
-    CREATE INDEX ix_content_piece_title_tsv ON content_piece USING gin(title_tsv);
-    CREATE INDEX ix_content_piece_content_tsv ON content_piece USING gin(content_tsv);
-    ''')
-)
+            NEW.title_tsv := to_tsvector(lang, NEW.title);
+            NEW.content_tsv := to_tsvector(lang, NEW.content);
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE TRIGGER content_piece_tsvector_update
+            BEFORE INSERT OR UPDATE ON content_piece
+            FOR EACH ROW
+            EXECUTE FUNCTION content_piece_tsvector_trigger();
+
+        CREATE INDEX ix_content_piece_title_tsv ON content_piece USING gin(title_tsv);
+        CREATE INDEX ix_content_piece_content_tsv ON content_piece USING gin(content_tsv);
+        '''))

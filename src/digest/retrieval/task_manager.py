@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import Dict
+from typing import Dict, List
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from digest.retrieval.parsers.base import BaseParser, ParserRegistry
 from digest.database.models.source import Source
@@ -29,40 +30,49 @@ class TaskManager:
     async def _start_parser(self, source: Source):
         try:
             print(f"Parser for {source.name} activated")
-            source_id = source.id
-            parser_id = source.parser_id
-            parser_config = source.config
-
-            # Get update frequency from config or use default
+            parser_cls = ParserRegistry.get_parser(source.parser_id)
+            parser = parser_cls(source.id, source.config)
             update_frequency = source.update_frequency
 
-            parser_cls = ParserRegistry.get_parser(parser_id)
-            parser = parser_cls(source_id, parser_config)
-
             while True:
-                current_time = datetime.utcnow()
-                last_fetch = source.last_retrieved
+                try:
+                    current_time = datetime.utcnow()
+                    last_fetch = source.last_retrieved
 
-                if last_fetch and (current_time - last_fetch).total_seconds() < update_frequency:
-                    await asyncio.sleep(30) # no busy waiting
-                    continue
+                    if last_fetch and (current_time - last_fetch).total_seconds() < update_frequency:
+                        await asyncio.sleep(30)
+                        continue
 
-                await self._fetch_content(parser)
-                await asyncio.sleep(update_frequency)
+                    await self._fetch_content(parser)
+                    await asyncio.sleep(update_frequency)
 
-        except asyncio.CancelledError as e:
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    print(f"Error in parser loop for {source.name}: {str(e)}")
+                    await asyncio.sleep(60)  # Wait before retrying after error
+
+        except asyncio.CancelledError:
             print(f"Parser for {source.name} stopped")
-            raise e
+            raise
         except Exception as e:
-            print(f"Error in parser for {source.name}: {str(e)}")
+            print(f"Fatal error in parser for {source.name}: {str(e)}")
             raise e
 
     def start_all_parsers(self):
+        """Start all parsers as background tasks"""
         for source in self.source_repository.get_all():
-            try:
-                self.parser_tasks[source.id] = asyncio.create_task(self._start_parser(source))
-            except Exception as e:
-                print(f"Error starting parser for source {source.id}: {str(e)}")
+            if source.id not in self.parser_tasks:
+                self.parser_tasks[source.id] = asyncio.create_task(
+                    self._start_parser(source)
+                )
+
+    async def stop_all_parsers(self):
+        """Gracefully stop all parsers"""
+        for task in self.parser_tasks.values():
+            task.cancel()
+        await asyncio.gather(*self.parser_tasks.values(), return_exceptions=True)
+        self.parser_tasks.clear()
 
     def start_parser(self, source_id: str):
         source = self.source_repository.get_by_id(source_id)
