@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlmodel import Index, text, UniqueConstraint, DDL
 from sqlalchemy import event, Column as SQLAlchemyColumn, Table
 from sqlalchemy.ext.declarative import declared_attr
-
+from pgvector.sqlalchemy import Vector
 from digest.database.enums import ContentType
 
 # Create trigram extension if not exists
@@ -78,6 +78,7 @@ class ContentPiece(SQLModel, table=True):
     source_id: str = Field(foreign_key="source.id", index=True)
     metainfo: Dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
     processed: bool = Field(default=False)
+    embedding: Optional[list[float]] = Field(sa_column=Column(Vector(768), nullable=True))
 
     # Generated columns for full-text search
     title_tsv: Optional[str] = Field(

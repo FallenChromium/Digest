@@ -24,7 +24,9 @@ dependencies = [
     "tchan>=0.1.4",
     "sqlmodel",
     "alembic",
-    "psycopg2-binary"
+    "psycopg2-binary",
+    "pgvector>=0.4.0",
+    "sentence-transformers>=4.0.2",
 ]
 
 [dependency-groups]
