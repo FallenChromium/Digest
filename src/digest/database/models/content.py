@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator, validator
 from sqlmodel import Relationship, SQLModel, Field, Column
 from uuid import UUID, uuid4
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
@@ -8,6 +9,7 @@ from sqlalchemy import event, Column as SQLAlchemyColumn, Table
 from sqlalchemy.ext.declarative import declared_attr
 from pgvector.sqlalchemy import Vector
 from digest.database.enums import ContentType
+import numpy as np
 
 # Create trigram extension if not exists
 
@@ -50,6 +52,8 @@ LANGDETECT_TO_POSTGRES_MAP: Dict[str, str] = {
 }
 
 class ContentPiece(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     __tablename__ = 'content_piece'
     """Database model for content pieces."""
     __table_args__ = (
@@ -78,7 +82,7 @@ class ContentPiece(SQLModel, table=True):
     source_id: str = Field(foreign_key="source.id", index=True)
     metainfo: Dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
     processed: bool = Field(default=False)
-    embedding: Optional[list[float]] = Field(sa_column=Column(Vector(768), nullable=True))
+    embedding: Optional[np.ndarray] = Field(sa_column=Column(Vector(768), nullable=True))
 
     # Generated columns for full-text search
     title_tsv: Optional[str] = Field(
@@ -96,13 +100,24 @@ class ContentPiece(SQLModel, table=True):
         exclude=True  # Exclude from model serialization
     )
 
+    @field_serializer("embedding")
+    def serialize_embedding(self, embedding: np.ndarray):
+        if embedding is not None:
+            return embedding.tolist()
+        return None
+
     source: "Source" = Relationship(back_populates="content_pieces") # type: ignore
 
     @staticmethod
     def convert_language_code(lang_code: str) -> str:
         return LANGDETECT_TO_POSTGRES_MAP.get(lang_code, 'simple')
 
-# Create trigram extension before anything else
+
+event.listen(
+    SQLModel.metadata,
+    'before_create',
+    DDL('CREATE EXTENSION IF NOT EXISTS vector;')
+)
 event.listen(
     SQLModel.metadata,
     'before_create',
