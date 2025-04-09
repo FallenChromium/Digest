@@ -10,6 +10,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
+import pgvector
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.
@@ -24,4 +25,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    ${downgrades if downgrades else "pass"} 
+    ${downgrades if downgrades else "pass"}
