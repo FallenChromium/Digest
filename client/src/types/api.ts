@@ -6,13 +6,17 @@ export interface Source {
   updated_at: string;
 }
 
+export enum SearchMethod {
+  FTS = "fts",
+  SEMANTIC = "semantic"
+}
 export interface Content {
   id: string;
   source_id: string;
   title: string;
   content: string;
   url: string;
-  created_at: string;
+  published_at: string;
   updated_at: string;
 }
 

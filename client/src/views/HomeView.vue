@@ -29,8 +29,13 @@
 
       <!-- Search Section -->
       <n-card title="Search Content" class="card-container">
-        <n-space vertical>
+           
+          <n-space vertical>
+            <span class="switch-label">Semantic search</span>
+              <n-switch v-model:value="semanticSearch" label: />
+
           <n-input-group>
+            
             <n-input
               v-model:value="searchQuery"
               placeholder="Search content..."
@@ -60,7 +65,7 @@
                     </n-tag>
                   </template>
                   <template #description>
-                    <n-text depth="3">{{ formatDate(result.created_at) }}</n-text>
+                    <n-text depth="3">{{ formatDate(result.published_at) }}</n-text>
                   </template>
                   <div class="content-text">{{ result.content }}</div>
                   <template #footer>
@@ -101,7 +106,7 @@
                   </n-tag>
                 </template>
                 <template #description>
-                  <n-text depth="3">{{ formatDate(item.created_at) }}</n-text>
+                  <n-text depth="3">{{ formatDate(item.published_at) }}</n-text>
                 </template>
                 <div class="content-text">{{ item.content }}</div>
                 <template #footer>
@@ -153,6 +158,7 @@ import {
   NInput,
   NInputGroup,
   NButton,
+  NSwitch,
   NDivider,
   NList,
   NListItem,
@@ -166,6 +172,7 @@ import {
 import type { DataTableColumns } from 'naive-ui';
 import { getContent, getSources, searchContent } from '@/services/api';
 import type { Content, Source } from '@/types/api';
+import { SearchMethod } from '@/types/api';
 
 const message = useMessage();
 
@@ -177,6 +184,7 @@ const searchResults = ref<Content[] | null>(null);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalItems = ref(0);
+const semanticSearch = ref(false);
 const loadingSources = ref(false);
 const loadingContent = ref(false);
 const searching = ref(false);
@@ -243,7 +251,7 @@ const handleSearch = async () => {
 
   searching.value = true;
   try {
-    searchResults.value = await searchContent(searchQuery.value);
+    searchResults.value = await searchContent(searchQuery.value, semanticSearch.value ? SearchMethod.SEMANTIC : SearchMethod.FTS);
   } catch (error) {
     message.error('Failed to perform search');
     console.error('Failed to search content:', error);

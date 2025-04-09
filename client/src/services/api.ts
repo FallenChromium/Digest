@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Content, PaginatedResponse, Source } from '@/types/api';
+import type { Content, PaginatedResponse, Source, SearchMethod } from '@/types/api';
 import { mockSources, mockPaginatedContent, mockSearch } from '@/mocks/data';
 
 const USE_MOCK_DATA = false; // Toggle this to switch between mock and real API
@@ -32,12 +32,12 @@ export const getContent = async (
   return response.data;
 };
 
-export const searchContent = async (query: string): Promise<Content[]> => {
+export const searchContent = async (query: string, method: SearchMethod): Promise<Content[]> => {
   if (USE_MOCK_DATA) {
     return Promise.resolve(mockSearch(query));
   }
   const response = await api.get<Content[]>('/content/search', {
-    params: { query },
+    params: { query, method },
   });
   return response.data;
 }; 
