@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Literal
 from time import time
-from digest.database.repositories.content import ContentRepository
+from digest.database.repositories.content import ContentRepository, SearchMethod
 from digest.database.session import get_session
 
 router = APIRouter()
@@ -13,10 +13,15 @@ async def get_content(page: int = 1, page_size: int = 10, session: Session = Dep
     content_repository = ContentRepository(session)
     return content_repository.get_all_paged(page, page_size)
 
-@router.get("/search")
-async def search_content(query: str, session: Session = Depends(get_session)):
+@router.get("/similar")
+async def get_similar(piece_id: str, session: Session = Depends(get_session)):
     content_repository = ContentRepository(session)
-    return content_repository.search(query)
+    return content_repository.get_similar_by_id(piece_id)
+
+@router.get("/search")
+async def search_content(query: str, method: SearchMethod = SearchMethod.FTS, session: Session = Depends(get_session)):
+    content_repository = ContentRepository(session)
+    return content_repository.search(query, method=method)
 
 @router.get("/search/benchmark")
 async def benchmark_search(
