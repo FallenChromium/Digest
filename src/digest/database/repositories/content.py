@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from digest.database.enums import ContentType
 from digest.database.models.content import ContentPiece
+from digest.retrieval.embedder import embedder
 
 
 @dataclass
@@ -271,6 +272,7 @@ class ContentRepository:
 
         # TODO: should be moved to pipelines and ran by a task manager
         for piece in content_pieces:
+            piece.embedding = embedder.embed_document(piece.content)
             if not piece.metainfo:
                 piece.metainfo = {}
             if 'language' not in piece.metainfo:

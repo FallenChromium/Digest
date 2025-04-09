@@ -12,7 +12,7 @@ class Embedder:
         """
         self.model = SentenceTransformer(model_name, trust_remote_code=True)
     
-    def embed_query(self, text: str, matryoshka_dim: int = 128) -> list[float]:
+    def embed_query(self, text: str, matryoshka_dim: int = 768) -> list[float]:
         """Embed a search query with appropriate prefixing.
         
         Args:
@@ -21,7 +21,7 @@ class Embedder:
         """
         return self._process(text, "search_query: ", matryoshka_dim)
     
-    def embed_document(self, text: str, matryoshka_dim: int = 128) -> list[float]:
+    def embed_document(self, text: str, matryoshka_dim: int = 768) -> list[float]:
         """Embed a document with appropriate prefixing.
         
         Args:
@@ -38,6 +38,9 @@ class Embedder:
         embeddings = embeddings[:, :matryoshka_dim]
         embeddings = F.normalize(embeddings, p=2, dim=-1)
         return embeddings.squeeze(0).tolist()
+
+
+embedder = Embedder()
 
 # if __name__ == "__main__":
 #     # Example usage
