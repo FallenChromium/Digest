@@ -82,7 +82,7 @@ class ContentPiece(SQLModel, table=True):
     source_id: str = Field(foreign_key="source.id", index=True)
     metainfo: Dict[str, Any] = Field(default_factory=dict, sa_type=JSONB)
     processed: bool = Field(default=False)
-    embedding: Optional[np.ndarray] = Field(sa_column=Column(Vector(768), nullable=True))
+    embedding: Optional[list[float]] = Field(sa_column=Column(Vector(768), nullable=True, default=None))
 
     # Generated columns for full-text search
     title_tsv: Optional[str] = Field(
@@ -103,9 +103,12 @@ class ContentPiece(SQLModel, table=True):
     @field_serializer("embedding")
     def serialize_embedding(self, embedding: np.ndarray):
         if embedding is not None:
-            return embedding.tolist()
+            if isinstance(embedding, np.ndarray):
+                return embedding.tolist()
+            elif isinstance(embedding, list):
+                return embedding
         return None
-
+    
     source: "Source" = Relationship(back_populates="content_pieces") # type: ignore
 
     @staticmethod
