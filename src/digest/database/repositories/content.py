@@ -1,22 +1,30 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from uuid import UUID
 from sqlalchemy import func, or_, text, literal
 from sqlmodel import Session, cast, select
 from sqlalchemy.dialects.postgresql import insert, REGCONFIG
 import langdetect
 from dataclasses import dataclass
-
+from datetime import datetime
 
 from digest.database.enums import ContentType
 from digest.database.models.content import ContentPiece
 from digest.retrieval.embedder import embedder
+from enum import Enum
 
+class SearchMethod(Enum):
+    FTS = "fts"
+    SEMANTIC = "semantic"
 
 @dataclass
 class SearchResult:
     id: str
     title: str
     content: str
+    published_at: datetime
+    url: str
+    source: str
+    source_id: UUID
     rank: Optional[float] = None
     similarity: Optional[float] = None
     snippet: Optional[str] = None
@@ -70,6 +78,11 @@ class ContentRepository:
         self.session.commit()
         self.session.refresh(content_piece)
         return content_piece
+
+    def get_similar_by_id(self, content_id: UUID, limit: int = 5) -> List[ContentPiece]:
+        piece = self.get_by_id(content_id)
+        stmt = select(ContentPiece).order_by(ContentPiece.embedding.l2_distance(piece.embedding)).limit(limit).offset(1) # offset since the smallest l2 is the article itself
+        return list(self.session.exec(stmt))
 
     def get_by_id(self, content_id: UUID) -> Optional[ContentPiece]:
         """Get a content piece by ID."""
@@ -168,14 +181,14 @@ class ContentRepository:
         )
         return result or content[:200] + "..."  # Fallback to first 200 chars if no matches
 
-    def search(self, query: str, similarity_threshold: float = 0.3, include_plan: bool = False) -> List[SearchResult]:
+    def search(self, query: str,  method: SearchMethod = SearchMethod.FTS, include_plan: bool = False) -> List[SearchResult]:
         """
         Search for content pieces using a combination of full-text search and trigram similarity.
         The search is performed across multiple languages and is typo-tolerant.
         """
+        similarity_threshold = 0.3
         # Detect query language
         query_lang = self._detect_language(query)
-
         # Convert query to tsquery
         tsquery = func.plainto_tsquery(cast(literal(query_lang), type_=REGCONFIG), query)
 
@@ -184,7 +197,8 @@ class ContentRepository:
             ContentPiece,
             func.ts_rank(text('content_tsv'), tsquery).label('rank'),
             func.similarity(ContentPiece.content, query).label('content_sim'),
-            func.similarity(ContentPiece.title, query).label('title_sim')
+            func.similarity(ContentPiece.title, query).label('title_sim'),
+            (1 / (1 + ContentPiece.embedding.l2_distance(embedder.embed_query(query)))).label('embedding_sim') if method == SearchMethod.SEMANTIC else 0
         ).where(
             or_(
                 # Match by full-text search
@@ -204,11 +218,20 @@ class ContentRepository:
 
         # Sort results by combining FTS rank and trigram similarity
         # TODO: dynamic weighing?
-        sorted_results = sorted(
-            results,
-            key=lambda x: (x[1] * 0.4 + max(x[2], x[3]) * 0.6),
-            reverse=True
-        )
+        if method == SearchMethod.FTS:
+            sorted_results = sorted(
+                results,
+                key=lambda x: (x[1] * 0.4 + max(x[2], x[3]) * 0.6),
+                reverse=True
+            )
+        elif method == SearchMethod.SEMANTIC:
+            sorted_results = sorted(
+                results,
+                key=lambda x: x[4],
+                reverse=True
+            )
+        else:
+            raise Exception("Unsupported search method")
 
         # Return unique content pieces in order of relevance
         seen = set()
@@ -221,6 +244,10 @@ class ContentRepository:
                     id=str(result[0].id),
                     title=result[0].title,
                     content=result[0].content,
+                    published_at=result[0].published_at,
+                    url=result[0].url,
+                    source=result[0].author,
+                    source_id=result[0].source_id,
                     rank=float(result[1]),
                     similarity=max(float(result[2]), float(result[3])),
                     snippet=snippet,
@@ -339,6 +366,9 @@ class ContentRepository:
                 id=str(r[0].id),
                 title=r[0].title,
                 content=r[0].content,
+                published_at=r[0].published_at,
+                url=r[0].url,
+                source=r[0].author,
                 rank=float(r[1]),
                 snippet=r[2],
                 query_plan=plan
