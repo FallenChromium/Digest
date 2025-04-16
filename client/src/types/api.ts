@@ -18,6 +18,7 @@ export interface Content {
   url: string;
   published_at: string;
   updated_at: string;
+  similar?: Content[];
 }
 
 export interface PaginatedResponse<T> {

@@ -29,13 +29,11 @@
 
       <!-- Search Section -->
       <n-card title="Search Content" class="card-container">
-           
-          <n-space vertical>
-            <span class="switch-label">Semantic search</span>
-              <n-switch v-model:value="semanticSearch" label: />
+        <n-space vertical>
+          <span class="switch-label">Semantic search</span>
+          <n-switch v-model:value="semanticSearch" label: />
 
           <n-input-group>
-            
             <n-input
               v-model:value="searchQuery"
               placeholder="Search content..."
@@ -56,7 +54,7 @@
           <!-- Search Results -->
           <template v-if="searchResults">
             <n-divider>Results</n-divider>
-            <n-list v-if="searchResults.length > 0" hoverable clickable class="results-list">
+            <n-list v-if="searchResults.length > 0" class="results-list">
               <n-list-item v-for="result in searchResults" :key="result.id">
                 <n-thing :title="result.title" class="content-item">
                   <template #header>
@@ -68,8 +66,9 @@
                     <n-text depth="3">{{ formatDate(result.published_at) }}</n-text>
                   </template>
                   <div class="content-text">{{ result.content }}</div>
+
                   <template #footer>
-                    <n-space>
+                    <n-space align="center">
                       <n-button
                         text
                         type="primary"
@@ -80,16 +79,34 @@
                       >
                         View Source
                       </n-button>
+
+                      <n-button
+                        type="default"
+                        @click="goToContentPage(result.id)"
+                        class="details-button"
+                      >
+                        Details
+                      </n-button>
                     </n-space>
                   </template>
+
+                  <!-- Display Similar Content -->
+                  <n-divider>Similar Content</n-divider>
+                  <n-space align="center" wrap>
+                    <n-button
+                      v-for="similar in result.similar"
+                      :key="similar.id"
+                      @click="goToContentPage(similar.id)"
+                      size="small"
+                      type="info"
+                    >
+                    {{ getSourceName(similar.source_id) }} | {{ similar.title }}
+                    </n-button>
+                  </n-space>
                 </n-thing>
               </n-list-item>
             </n-list>
-            <n-empty
-              v-else
-              description="No results found. Try different search terms."
-            >
-            </n-empty>
+            <n-empty v-else description="No results found. Try different search terms."></n-empty>
           </template>
         </n-space>
       </n-card>
@@ -97,7 +114,7 @@
       <!-- Content Section -->
       <n-card title="All Content" class="card-container">
         <n-space vertical>
-          <n-list v-if="content.length > 0" hoverable clickable class="content-list">
+          <n-list v-if="content.length > 0" class="content-list">
             <n-list-item v-for="item in content" :key="item.id">
               <n-thing :title="item.title" class="content-item">
                 <template #header>
@@ -109,8 +126,9 @@
                   <n-text depth="3">{{ formatDate(item.published_at) }}</n-text>
                 </template>
                 <div class="content-text">{{ item.content }}</div>
+
                 <template #footer>
-                  <n-space>
+                  <n-space align="center">
                     <n-button
                       text
                       type="primary"
@@ -121,16 +139,37 @@
                     >
                       View Source
                     </n-button>
+
+                    <n-button
+                      type="default"
+                      @click="goToContentPage(item.id)"
+                      class="details-button"
+                    >
+                      Details
+                    </n-button>
                   </n-space>
                 </template>
+
+                <!-- Display Similar Content -->
+                <n-divider>Similar Content</n-divider>
+                <n-space align="center" wrap>
+                  <n-button
+                    v-for="similar in item.similar"
+                    :key="similar.id"
+                    @click="goToContentPage(similar.id)"
+                    size="small"
+                    type="info"
+                  >
+                  {{ getSourceName(similar.source_id) }} | {{ similar.title }}
+                  </n-button>
+                </n-space>
               </n-thing>
             </n-list-item>
           </n-list>
           <n-empty
             v-else-if="totalItems === 0"
             description="No content available. Content will appear here once sources start collecting data"
-          >
-          </n-empty>
+          ></n-empty>
 
           <n-pagination
             v-if="totalItems > 0"
@@ -151,6 +190,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, h } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   NSpace,
   NCard,
@@ -170,11 +210,12 @@ import {
   useMessage,
 } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui';
-import { getContent, getSources, searchContent } from '@/services/api';
+import { getContent, getSources, searchContent, getSimilarContent } from '@/services/api';
 import type { Content, Source } from '@/types/api';
 import { SearchMethod } from '@/types/api';
 
 const message = useMessage();
+const router = useRouter();
 
 // State
 const sources = ref<Source[]>([]);
@@ -235,6 +276,12 @@ const loadContent = async () => {
     const response = await getContent(currentPage.value, pageSize.value);
     content.value = response.items;
     totalItems.value = response.total;
+
+    // Fetch similar content for each piece
+    for (let item of content.value) {
+      const similarContent = await getSimilarContent(item.id);
+      item.similar = similarContent.slice(0, 3);
+    }
   } catch (error) {
     message.error('Failed to load content');
     console.error('Failed to load content:', error);
@@ -252,6 +299,12 @@ const handleSearch = async () => {
   searching.value = true;
   try {
     searchResults.value = await searchContent(searchQuery.value, semanticSearch.value ? SearchMethod.SEMANTIC : SearchMethod.FTS);
+    console.log(searchResults);
+    // Fetch similar content for each search result
+    for (let result of searchResults.value) {
+      const similarContent = await getSimilarContent(result.id);
+      result.similar = similarContent.slice(0, 3);
+    }
   } catch (error) {
     message.error('Failed to perform search');
     console.error('Failed to search content:', error);
@@ -281,6 +334,10 @@ const formatDate = (dateString: string): string => {
   });
 };
 
+const goToContentPage = (id: string) => {
+  router.push({ name: 'ContentDetail', params: { id } });
+};
+
 // Lifecycle
 onMounted(() => {
   loadSources();
@@ -288,7 +345,7 @@ onMounted(() => {
 });
 </script>
 
-<style>
+<style scoped>
 :root {
   --content-max-width: 1200px;
 }
@@ -336,6 +393,11 @@ onMounted(() => {
 
 .source-link {
   font-size: 14px;
+}
+
+.details-button {
+  font-size: 14px;
+  margin-left: 8px;
 }
 
 .analysis-container {
