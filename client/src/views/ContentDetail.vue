@@ -11,6 +11,17 @@
         <n-text depth="3">{{ formatDate(content.published_at) }}</n-text>
         <div class="content-text">{{ content.content }}</div>
 
+        <n-button
+          text
+          type="primary"
+          tag="a"
+          :href="content.url"
+          target="_blank"
+          class="source-link"
+        >
+          View Source
+        </n-button>
+
         <n-divider>Similar Content</n-divider>
         <n-list hoverable clickable>
           <n-list-item
@@ -18,7 +29,9 @@
             :key="similar.id"
             @click="goToContentPage(similar.id)"
           >
-            <n-text>{{ getSourceName(content.source_id) }} | {{ similar.title }}</n-text>
+            <n-text>
+              {{ getSourceName(similar.source_id) }} | {{ similar.content.substring(0, 50) + '...' }}
+            </n-text>
           </n-list-item>
         </n-list>
       </n-space>
@@ -28,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import {
   NSpace,
   NCard,
@@ -100,6 +113,11 @@ const formatDate = (dateString: string): string => {
 onMounted(() => {
   loadSources()
   loadContentDetail()
+})
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    loadContentDetail()
+  }
 })
 </script>
 

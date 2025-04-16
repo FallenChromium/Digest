@@ -98,9 +98,8 @@
                       :key="similar.id"
                       @click="goToContentPage(similar.id)"
                       size="small"
-                      type="info"
                     >
-                    {{ getSourceName(similar.source_id) }} | {{ similar.title }}
+                    {{ getSourceName(similar.source_id) }} | {{ similar.content.substring(0, 20) + '...' }}
                     </n-button>
                   </n-space>
                 </n-thing>
@@ -158,9 +157,8 @@
                     :key="similar.id"
                     @click="goToContentPage(similar.id)"
                     size="small"
-                    type="info"
                   >
-                  {{ getSourceName(similar.source_id) }} | {{ similar.title }}
+                  {{ getSourceName(similar.source_id) }} | {{ similar.content.substring(0, 20) + '...' }}
                   </n-button>
                 </n-space>
               </n-thing>
@@ -274,13 +272,13 @@ const loadContent = async () => {
   loadingContent.value = true;
   try {
     const response = await getContent(currentPage.value, pageSize.value);
-    content.value = response.items;
-    totalItems.value = response.total;
+    content.value = response;
+    totalItems.value = response.length;
 
     // Fetch similar content for each piece
     for (let item of content.value) {
       const similarContent = await getSimilarContent(item.id);
-      item.similar = similarContent.slice(0, 3);
+      item.similar = similarContent;
     }
   } catch (error) {
     message.error('Failed to load content');
@@ -299,11 +297,9 @@ const handleSearch = async () => {
   searching.value = true;
   try {
     searchResults.value = await searchContent(searchQuery.value, semanticSearch.value ? SearchMethod.SEMANTIC : SearchMethod.FTS);
-    console.log(searchResults);
-    // Fetch similar content for each search result
     for (let result of searchResults.value) {
       const similarContent = await getSimilarContent(result.id);
-      result.similar = similarContent.slice(0, 3);
+      result.similar = similarContent;
     }
   } catch (error) {
     message.error('Failed to perform search');
@@ -338,7 +334,6 @@ const goToContentPage = (id: string) => {
   router.push({ name: 'ContentDetail', params: { id } });
 };
 
-// Lifecycle
 onMounted(() => {
   loadSources();
   loadContent();

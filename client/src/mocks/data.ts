@@ -74,15 +74,16 @@ export const mockContent: Content[] = [
   },
 ];
 
-export const mockPaginatedContent = (page: number = 1, size: number = 10): PaginatedResponse<Content> => {
+export const mockPaginatedContent = (page: number = 1, size: number = 10): Content[] => {
   const start = (page - 1) * size;
   const end = start + size;
-  return {
-    items: mockContent.slice(start, end),
-    total: mockContent.length,
-    page,
-    size,
-  };
+  return mockContent.slice(start, end);
+  // return {
+  //   items: mockContent.slice(start, end),
+  //   total: mockContent.length,
+  //   page,
+  //   size,
+  // };
 };
 
 export const mockSearch = (query: string): Content[] => {
