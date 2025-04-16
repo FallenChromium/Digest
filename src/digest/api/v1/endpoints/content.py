@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
-from typing import List, Dict, Any, Literal
+from typing import Dict, Any
 from time import time
+
 from digest.database.repositories.content import ContentRepository, SearchMethod
 from digest.database.session import get_session
 
@@ -13,15 +14,29 @@ async def get_content(page: int = 1, page_size: int = 10, session: Session = Dep
     content_repository = ContentRepository(session)
     return content_repository.get_all_paged(page, page_size)
 
+
+@router.get("/{content_id}")
+async def get_by_id(content_id: str, session: Session = Depends(get_session)):
+    content_repository = ContentRepository(session)
+    content_piece = content_repository.get_by_id(content_id)
+    if content_piece is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Content piece with id={content_id} does not exist."
+        )
+    return content_piece
+
 @router.get("/similar")
 async def get_similar(piece_id: str, session: Session = Depends(get_session)):
     content_repository = ContentRepository(session)
     return content_repository.get_similar_by_id(piece_id)
 
+
 @router.get("/search")
 async def search_content(query: str, method: SearchMethod = SearchMethod.FTS, session: Session = Depends(get_session)):
     content_repository = ContentRepository(session)
     return content_repository.search(query, method=method)
+
 
 @router.get("/search/benchmark")
 async def benchmark_search(
