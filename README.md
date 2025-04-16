@@ -12,6 +12,8 @@ uv sync
 cd src/digest
 uv run main.py
 ```
+- The Docker running is required.
+- The model `nomic-ai/nomic-embed-text-v1.5` (~600MB) will be downloaded for the first launch.
 
 #### Development with Docker (Recommended)
 ```bash
