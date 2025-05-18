@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 from typing import Dict, Any
 from time import time
+from ollama import Client
+from fastapi.responses import StreamingResponse
 
 from digest.database.repositories.content import ContentRepository, SearchMethod
 from digest.database.session import get_session
@@ -205,3 +207,41 @@ async def get_by_id(content_id: str, session: Session = Depends(get_session)):
             detail=f"Content piece with id={content_id} does not exist."
         )
     return content_piece
+
+
+@router.post("/summary")
+async def summarize(content_ids: list[str], session: Session = Depends(get_session)):
+    content_repository = ContentRepository(session)
+    content_pieces = [content_repository.get_by_id(id) for id in content_ids]
+    content_pieces = [elem for elem in content_pieces if elem is not None]
+    
+    if not len(content_pieces):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Content pieces with ids={content_ids} do not exist."
+        )
+    
+    prompt = """You are a summarization agent tasked with summarizing a collection of social media posts. Your summary must be concise and accurate, and each piece of information must be directly supported by at least one of the provided posts. For each piece of information in the summary, include a citation in the form of the post's number in square brackets (e.g. [1]) at the end of the sentence or phrase. Do not include any information that is not explicitly stated in the provided posts. Write the summary right away without telling that it is a summary.
+    
+    Posts:"""
+
+    for i, content_piece in enumerate(content_pieces):
+        prompt += f'\n[Post {i + 1}] id: {content_piece.id} content: "{content_piece.content}"'
+
+    def generate():
+        messages = [{'role': 'user', 'content': prompt}]
+        
+        client = Client(host='http://localhost:11434')
+
+        stream = client.chat(
+            model="llama3.1",
+            messages=messages,
+            stream=True,
+        )
+        
+        for chunk in stream:
+            content = chunk['message']['content']
+            if content:
+                yield content
+
+    return StreamingResponse(generate(), media_type="text/plain")
