@@ -185,3 +185,4 @@ history4feed
 # Front-end
 node_modules
 
+.DS_Store
