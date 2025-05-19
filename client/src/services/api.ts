@@ -58,4 +58,12 @@ export const searchContent = async (query: string, method: SearchMethod): Promis
     params: { query, method },
   });
   return response.data.slice(0, 5);
-}; 
+};
+
+export const summarizeContent = async (contentIds: string[]): Promise<string> => {
+  if (USE_MOCK_DATA) {
+    return Promise.resolve("MOCK MOCK");
+  }
+  const response = await api.post<string>('/content/summary', contentIds);
+  return response.data;
+};

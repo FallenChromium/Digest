@@ -28,6 +28,13 @@
           <!-- Search Results -->
           <template v-if="searchResults">
             <n-divider>Results</n-divider>
+            
+            <!-- Add Summarize Button Component -->
+            <summarize-button 
+              v-if="searchResults.length > 0" 
+              :content-ids="searchResults.map(result => result.id)" 
+            />
+            
             <n-list v-if="searchResults.length > 0" class="results-list">
               <n-list-item v-for="result in searchResults" :key="result.id">
                 <n-thing :title="result.title" class="content-item">
@@ -138,6 +145,7 @@ import type { DataTableColumns } from 'naive-ui';
 import { getContent, getSources, searchContent, getSimilarContent } from '@/services/api';
 import type { Content, Source } from '@/types/api';
 import { SearchMethod } from '@/types/api';
+import SummarizeButton from '@/components/SummarizeButton.vue';
 
 const message = useMessage();
 const router = useRouter();
