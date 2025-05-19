@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import {
   NConfigProvider,
   NLayout,
@@ -10,7 +10,19 @@ import {
   NDialogProvider,
   NNotificationProvider,
   NMessageProvider,
+  NSpace,
+  NButton,
 } from 'naive-ui';
+
+const router = useRouter();
+
+const navigateToHome = () => {
+  router.push('/');
+};
+
+const navigateToContent = () => {
+  router.push('/content');
+};
 </script>
 
 <template>
@@ -23,7 +35,13 @@ import {
               <n-layout-header bordered class="header">
                 <n-page-header>
                   <template #title>
-                    Digest Project
+                    <div class="header-title" @click="navigateToHome">Digest Project</div>
+                  </template>
+                  <template #extra>
+                    <n-space>
+                      <n-button @click="navigateToHome">Home</n-button>
+                      <n-button @click="navigateToContent">All Content</n-button>
+                    </n-space>
                   </template>
                 </n-page-header>
               </n-layout-header>
@@ -67,6 +85,10 @@ html, body {
   padding: 0 16px;
   display: flex;
   align-items: center;
+}
+
+.header-title {
+  cursor: pointer;
 }
 
 .content {

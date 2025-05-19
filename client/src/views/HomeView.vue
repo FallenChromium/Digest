@@ -1,32 +1,6 @@
 <template>
   <div class="home-container">
     <n-space vertical size="large">
-      <!-- Sources Section -->
-      <n-card title="Sources" class="card-container">
-        <n-space vertical>
-          <n-data-table
-            :columns="sourceColumns"
-            :data="sources"
-            :loading="loadingSources"
-            :pagination="{
-              pageSize: 10,
-              showSizePicker: true,
-              pageSizes: [5, 10, 15, 20],
-            }"
-            :bordered="false"
-            class="clean-table"
-          />
-          <n-empty
-            v-if="!loadingSources && sources.length === 0"
-            description="No sources available"
-          >
-            <template #extra>
-              <n-text depth="3">Add some sources to start collecting content</n-text>
-            </template>
-          </n-empty>
-        </n-space>
-      </n-card>
-
       <!-- Search Section -->
       <n-card title="Search Content" class="card-container">
         <n-space vertical>
@@ -110,76 +84,29 @@
         </n-space>
       </n-card>
 
-      <!-- Content Section -->
-      <n-card title="All Content" class="card-container">
+      <!-- Sources Section -->
+      <n-card title="Sources" class="card-container">
         <n-space vertical>
-          <n-list v-if="content.length > 0" class="content-list">
-            <n-list-item v-for="item in content" :key="item.id">
-              <n-thing :title="item.title" class="content-item">
-                <template #header>
-                  <n-tag :bordered="false" type="info" size="small">
-                    {{ getSourceName(item.source_id) }}
-                  </n-tag>
-                </template>
-                <template #description>
-                  <n-text depth="3">{{ formatDate(item.published_at) }}</n-text>
-                </template>
-                <div class="content-text">{{ item.content }}</div>
-
-                <template #footer>
-                  <n-space align="center">
-                    <n-button
-                      text
-                      type="primary"
-                      tag="a"
-                      :href="item.url"
-                      target="_blank"
-                      class="source-link"
-                    >
-                      View Source
-                    </n-button>
-
-                    <n-button
-                      type="default"
-                      @click="goToContentPage(item.id)"
-                      class="details-button"
-                    >
-                      Details
-                    </n-button>
-                  </n-space>
-                </template>
-
-                <!-- Display Similar Content -->
-                <n-divider>Similar Content</n-divider>
-                <n-space align="center" wrap>
-                  <n-button
-                    v-for="similar in item.similar"
-                    :key="similar.id"
-                    @click="goToContentPage(similar.id)"
-                    size="small"
-                  >
-                  {{ getSourceName(similar.source_id) }} | {{ similar.content.substring(0, 20) + '...' }}
-                  </n-button>
-                </n-space>
-              </n-thing>
-            </n-list-item>
-          </n-list>
-          <n-empty
-            v-else-if="totalItems === 0"
-            description="No content available. Content will appear here once sources start collecting data"
-          ></n-empty>
-
-          <n-pagination
-            v-if="totalItems > 0"
-            v-model:page="currentPage"
-            v-model:page-size="pageSize"
-            :item-count="totalItems"
-            show-size-picker
-            :page-sizes="[10, 20, 30, 40]"
-            @update:page="loadContent"
-            @update:page-size="handlePageSizeChange"
-            class="pagination"
+          <n-data-table
+            :columns="sourceColumns"
+            :data="sources"
+            :loading="loadingSources"
+            :pagination="{
+              pageSize: 10,
+              showSizePicker: true,
+              pageSizes: [5, 10, 15, 20],
+            }"
+            :bordered="false"
+            class="clean-table"
           />
+          <n-empty
+            v-if="!loadingSources && sources.length === 0"
+            description="No sources available"
+          >
+            <template #extra>
+              <n-text depth="3">Add some sources to start collecting content</n-text>
+            </template>
+          </n-empty>
         </n-space>
       </n-card>
     </n-space>
@@ -217,15 +144,10 @@ const router = useRouter();
 
 // State
 const sources = ref<Source[]>([]);
-const content = ref<Content[]>([]);
 const searchQuery = ref('');
 const searchResults = ref<Content[] | null>(null);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const totalItems = ref(0);
 const semanticSearch = ref(false);
 const loadingSources = ref(false);
-const loadingContent = ref(false);
 const searching = ref(false);
 
 // Source columns configuration

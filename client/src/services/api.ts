@@ -57,5 +57,5 @@ export const searchContent = async (query: string, method: SearchMethod): Promis
   const response = await api.get<Content[]>('/content/search', {
     params: { query, method },
   });
-  return response.data;
+  return response.data.slice(0, 5);
 }; 
