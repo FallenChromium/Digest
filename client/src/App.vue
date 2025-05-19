@@ -23,6 +23,11 @@ const navigateToHome = () => {
 const navigateToContent = () => {
   router.push('/content');
 };
+
+// Add navigation function for About page
+const navigateToAbout = () => {
+  router.push('/about');
+};
 </script>
 
 <template>
@@ -41,6 +46,7 @@ const navigateToContent = () => {
                     <n-space>
                       <n-button @click="navigateToHome">Home</n-button>
                       <n-button @click="navigateToContent">All Content</n-button>
+                      <n-button @click="navigateToAbout">About</n-button>
                     </n-space>
                   </template>
                 </n-page-header>
